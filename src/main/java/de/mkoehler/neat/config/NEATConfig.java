@@ -28,6 +28,9 @@ public class NEATConfig {
     /** The weight of the new connection leading into a newly added node. Usually 1.0. */
     public double addNodeNewLinkWeight = 1.0;
 
+    /** If true, allows the creation of recurrent connections during mutation. */
+    public boolean allowRecurrent = false;
+
     // Network
     public int inputNodes;
     public int outputNodes;

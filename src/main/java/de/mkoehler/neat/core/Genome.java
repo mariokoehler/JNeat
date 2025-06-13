@@ -1,5 +1,9 @@
 package de.mkoehler.neat.core;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import de.mkoehler.neat.config.NEATConfig;
 import de.mkoehler.neat.evolution.InnovationTracker;
 import lombok.Getter;
@@ -23,7 +27,8 @@ import java.util.TreeMap;
 @ToString
 public class Genome {
     private final Map<Integer, NodeGene> nodes;
-    private final Map<Integer, ConnectionGene> connections;
+    @Setter
+    private Map<Integer, ConnectionGene> connections;
     @Setter
     private double fitness = 0.0;
     @Setter
@@ -102,11 +107,9 @@ public class Genome {
         List<NodeGene> possibleInputs = new ArrayList<>();
         List<NodeGene> possibleOutputs = new ArrayList<>();
 
-        for (NodeGene node : nodes.values()) {
-            if (node.type() != NodeType.OUTPUT) {
-                possibleInputs.add(node);
-            }
-            if (node.type() != NodeType.INPUT) {
+        for(NodeGene node : nodes.values()){
+            possibleInputs.add(node);
+            if(node.type() != NodeType.INPUT){
                 possibleOutputs.add(node);
             }
         }
@@ -122,12 +125,9 @@ public class Genome {
                 continue;
             }
 
-            // To prevent a cycle, we check if a path already exists from the
-            // intended destination (node2) to the intended source (node1).
-            if (isPathExists(node2.id(), node1.id())) {
+            if (!config.allowRecurrent && isPathExists(node2.id(), node1.id())) {
                 continue;
             }
-
             // Use the configurable weight range
             double weight = random.nextDouble() * config.newConnectionWeightRange * 2 - config.newConnectionWeightRange;
             int innovation = innovationTracker.getInnovationNumber(node1.id(), node2.id());
@@ -274,6 +274,7 @@ public class Genome {
      * Generates a string representation of the genome's topology for debugging.
      * @return A string detailing nodes and connections.
      */
+    @JsonIgnore
     public String getTopologyString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Nodes:\n");
@@ -288,4 +289,92 @@ public class Genome {
                         c.getInnovationNumber(), c.getInNodeId(), c.getOutNodeId(), c.getWeight(), c.isEnabled() ? "E" : "D")));
         return sb.toString();
     }
+
+    /**
+     * Serializes the current Genome object into a pretty-printed JSON string.
+     * @return A JSON string representation of the genome.
+     */
+    public String toJsonString() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            // Use a "pretty printer" to make the JSON human-readable
+            ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
+            return writer.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            // In a real application, you might use a proper logger here
+            e.printStackTrace();
+            // Re-throw as a runtime exception to avoid forcing callers to handle it
+            throw new RuntimeException("Error serializing Genome to JSON", e);
+        }
+    }
+
+    /**
+     * Deserializes a Genome object from a JSON string.
+     * @param json The JSON string to parse.
+     * @return A new Genome instance.
+     */
+    public static Genome fromJsonString(String json) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(json, Genome.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error deserializing Genome from JSON", e);
+        }
+    }
+
+    /**
+     * Creates a new, pruned version of this genome.
+     * <p>
+     * This method removes all disabled connections and any nodes that become
+     * disconnected as a result. The returned genome represents the minimal
+     * functional topology of the current one.
+     * </p>
+     * @return A new, clean Genome instance with only active components.
+     */
+    @JsonIgnore
+    public Genome getAsPruned() {
+        Genome prunedGenome = new Genome();
+        prunedGenome.nodes.clear(); // Start with no nodes
+
+        // 1. Collect all enabled connections.
+        Map<Integer, ConnectionGene> enabledConnections = new HashMap<>();
+        for (ConnectionGene conn : this.connections.values()) {
+            if (conn.isEnabled()) {
+                enabledConnections.put(conn.getInnovationNumber(), conn.copy());
+            }
+        }
+
+        if (enabledConnections.isEmpty()) {
+            // If there are no enabled connections, we might just have I/O nodes.
+            // Add them back so the genome isn't empty.
+            for (NodeGene node : this.nodes.values()) {
+                if (node.type() == NodeType.INPUT || node.type() == NodeType.OUTPUT) {
+                    prunedGenome.addNodeGene(node.copy());
+                }
+            }
+            return prunedGenome;
+        }
+
+        // 2. Identify all nodes that are part of an enabled connection.
+        Set<Integer> activeNodeIds = new HashSet<>();
+        for (ConnectionGene conn : enabledConnections.values()) {
+            activeNodeIds.add(conn.getInNodeId());
+            activeNodeIds.add(conn.getOutNodeId());
+        }
+
+        // 3. Add only the active nodes to the new genome.
+        for (int nodeId : activeNodeIds) {
+            prunedGenome.addNodeGene(this.nodes.get(nodeId).copy());
+        }
+
+        // 4. Add the enabled connections to the new genome.
+        prunedGenome.setConnections(enabledConnections);
+
+        // Set fitness for reference, though it's not strictly necessary for the pruned version.
+        prunedGenome.setFitness(this.fitness);
+
+        return prunedGenome;
+    }
+
 }

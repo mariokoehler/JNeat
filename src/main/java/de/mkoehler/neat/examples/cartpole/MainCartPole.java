@@ -14,7 +14,7 @@ public class MainCartPole {
         config.populationSize = 200; // A slightly larger population can be helpful
 
         // 2. Create our custom fitness evaluator
-        FitnessEvaluator evaluator = new CartPoleEvaluator();
+        FitnessEvaluator evaluator = new CartPoleEvaluator(config);
 
         // 3. Create a population
         Population population = new Population(config, evaluator);
@@ -41,14 +41,14 @@ public class MainCartPole {
         // 5. Demonstrate the best genome's performance
         System.out.println("\n--- Demonstrating Best Genome ---");
         System.out.println(bestGenome.getTopologyString());
-        demonstrateBestGenome(bestGenome);
+        demonstrateBestGenome(bestGenome, config);
     }
 
     /**
      * Runs a simulation with the best network and prints its state to the console.
      */
-    private static void demonstrateBestGenome(Genome bestGenome) {
-        NeuralNetwork bestNetwork = NeuralNetwork.create(bestGenome);
+    private static void demonstrateBestGenome(Genome bestGenome, NEATConfig config) {
+        NeuralNetwork bestNetwork = NeuralNetwork.create(bestGenome, config);
         CartPoleEnvironment env = new CartPoleEnvironment();
 
         for (int i = 0; i < CartPoleEvaluator.MAX_TIME_STEPS; i++) {

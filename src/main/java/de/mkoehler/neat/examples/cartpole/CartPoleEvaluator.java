@@ -1,5 +1,6 @@
 package de.mkoehler.neat.examples.cartpole;
 
+import de.mkoehler.neat.config.NEATConfig;
 import de.mkoehler.neat.core.Genome;
 import de.mkoehler.neat.evolution.FitnessEvaluator;
 import de.mkoehler.neat.network.NeuralNetwork;
@@ -15,12 +16,18 @@ public class CartPoleEvaluator implements FitnessEvaluator {
 
     public static final int MAX_TIME_STEPS = 5000;
 
+    private final NEATConfig config;
+
+    public CartPoleEvaluator(NEATConfig config) {
+        this.config = config;
+    }
+
     @Override
     public void evaluatePopulation(List<Genome> population) {
         for (Genome genome : population) {
             NeuralNetwork net;
             try {
-                net = NeuralNetwork.create(genome);
+                net = NeuralNetwork.create(genome, config);
             } catch (IllegalStateException e) {
                 // This genome describes an invalid (cyclic) network
                 System.err.println("Skipping evaluation of genome with invalid topology: " + e.getMessage());

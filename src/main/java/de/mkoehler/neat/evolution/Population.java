@@ -4,14 +4,17 @@ import de.mkoehler.neat.config.NEATConfig;
 import de.mkoehler.neat.core.Genome;
 import de.mkoehler.neat.core.NodeGene;
 import de.mkoehler.neat.core.NodeType;
+import lombok.Getter;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Population {
     private final NEATConfig config;
+    @Getter
     private final InnovationTracker innovationTracker;
     private final FitnessEvaluator evaluator;
+    @Getter
     private List<Genome> genomes;
     private List<Species> species;
     private int generation = 0;

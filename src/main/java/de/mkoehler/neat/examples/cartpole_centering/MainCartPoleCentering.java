@@ -34,7 +34,7 @@ public class MainCartPoleCentering {
         NEATConfig config = new NEATConfig(4, 1);
         config.populationSize = 250;
         config.compatibilityThreshold = 3.5;
-        FitnessEvaluator evaluator = new CartPoleRobustnessEvaluator(); // Using the robust one
+        FitnessEvaluator evaluator = new CartPoleRobustnessEvaluator(config);
         Population population = new Population(config, evaluator);
 
         Genome bestGenome = null;
@@ -68,7 +68,7 @@ public class MainCartPoleCentering {
         VisualizerFrame finalWinnerVisualizer = new VisualizerFrame("Final Winning Genome");
         finalWinnerVisualizer.updateVisuals(allTimeBest);
 
-        demonstrateBestGenome(allTimeBest);
+        demonstrateBestGenome(allTimeBest, config);
     }
 
     private void setupInteractiveVisualizer() {
@@ -87,9 +87,9 @@ public class MainCartPoleCentering {
         }
     }
 
-    private static void demonstrateBestGenome(Genome bestGenome) {
+    private static void demonstrateBestGenome(Genome bestGenome, NEATConfig config) {
         // ... (This method is the same as before, but uses interactiveVisualizer)
-        NeuralNetwork bestNetwork = NeuralNetwork.create(bestGenome);
+        NeuralNetwork bestNetwork = NeuralNetwork.create(bestGenome, config);
         demonstrationEnv = new CartPoleEnvironment();
         for (int i = 0; i < CartPoleCenteringEvaluator.MAX_TIME_STEPS; i++) {
             if (demonstrationEnv.isDone()) break;

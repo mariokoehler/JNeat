@@ -1,5 +1,6 @@
 package de.mkoehler.neat.examples.cartpole_centering;
 
+import de.mkoehler.neat.config.NEATConfig;
 import de.mkoehler.neat.core.Genome;
 import de.mkoehler.neat.evolution.FitnessEvaluator;
 import de.mkoehler.neat.network.NeuralNetwork;
@@ -25,12 +26,18 @@ public class CartPoleCenteringEvaluator implements FitnessEvaluator {
     public static final int MAX_TIME_STEPS = 5000;
     private static final double X_THRESHOLD = 2.4; // Must match the value in the environment
 
+    private final NEATConfig config;
+
+    public CartPoleCenteringEvaluator(NEATConfig config) {
+        this.config = config;
+    }
+
     @Override
     public void evaluatePopulation(List<Genome> population) {
         for (Genome genome : population) {
             NeuralNetwork net;
             try {
-                net = NeuralNetwork.create(genome);
+                net = NeuralNetwork.create(genome, config);
             } catch (IllegalStateException e) {
                 genome.setFitness(0);
                 continue;

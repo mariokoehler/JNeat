@@ -2,21 +2,14 @@ package de.mkoehler.neat.core;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-/**
- * A JPanel that visualizes the topology of a NEAT Genome.
- * It replicates the layered layout approach where nodes are positioned
- * based on their depth from the input layer.
- */
 public class GenomeVisualizer extends JPanel {
 
     private Genome genomeToDraw;
     private final Map<Integer, Point> nodePositions = new HashMap<>();
+    // Memoization cache for calculated depths
     private final Map<Integer, Integer> nodeDepths = new HashMap<>();
 
     public GenomeVisualizer() {
@@ -24,10 +17,6 @@ public class GenomeVisualizer extends JPanel {
         setPreferredSize(new Dimension(400, 400));
     }
 
-    /**
-     * Sets the genome to be visualized and triggers a repaint.
-     * @param genome The genome to display.
-     */
     public void updateGenome(Genome genome) {
         this.genomeToDraw = genome;
         this.nodePositions.clear();
@@ -50,16 +39,12 @@ public class GenomeVisualizer extends JPanel {
         drawNodes(g2d);
     }
 
-    /**
-     * Calculates the (x, y) coordinates for each node in the genome.
-     * This method implements the layered layout algorithm.
-     */
     private void calculateNodePositions() {
+        // ... (This part of the method remains the same) ...
         int width = getWidth();
         int height = getHeight();
         int margin = 50;
 
-        // Group nodes by type
         List<NodeGene> inputs = new ArrayList<>();
         List<NodeGene> outputs = new ArrayList<>();
         List<NodeGene> hiddens = new ArrayList<>();
@@ -69,17 +54,16 @@ public class GenomeVisualizer extends JPanel {
             else hiddens.add(n);
         }
 
-        // 1. Position input nodes on the left
         for (int i = 0; i < inputs.size(); i++) {
             double y = inputs.size() == 1 ? height / 2.0 : margin + i * (height - 2.0 * margin) / (inputs.size() - 1);
             nodePositions.put(inputs.get(i).id(), new Point(margin, (int) y));
         }
 
-        // 2. Calculate depth of all other nodes
-        for (NodeGene n : outputs) calculateNodeDepth(n.id());
-        for (NodeGene n : hiddens) calculateNodeDepth(n.id());
+        // --- The change is here: Call the new, safe depth calculation ---
+        for (NodeGene n : outputs) calculateNodeDepth(n.id(), new HashSet<>());
+        for (NodeGene n : hiddens) calculateNodeDepth(n.id(), new HashSet<>());
 
-        // Group hidden nodes by layer (depth)
+        // ... (The rest of the method for positioning nodes in layers remains the same) ...
         Map<Integer, List<NodeGene>> layers = new HashMap<>();
         int maxDepth = 0;
         for (NodeGene hiddenNode : hiddens) {
@@ -88,7 +72,6 @@ public class GenomeVisualizer extends JPanel {
             if (depth > maxDepth) maxDepth = depth;
         }
 
-        // 3. Position hidden nodes in their layers
         int numLayers = layers.keySet().size();
         List<Integer> sortedDepths = new ArrayList<>(layers.keySet());
         Collections.sort(sortedDepths);
@@ -103,39 +86,58 @@ public class GenomeVisualizer extends JPanel {
             }
         }
 
-        // 4. Position output nodes on the right
         for (int i = 0; i < outputs.size(); i++) {
             double y = outputs.size() == 1 ? height / 2.0 : margin + i * (height - 2.0 * margin) / (outputs.size() - 1);
             nodePositions.put(outputs.get(i).id(), new Point(width - margin, (int) y));
         }
     }
 
+    // ==================================================================
+    // === NEW, CYCLE-SAFE RECURSIVE METHOD =============================
+    // ==================================================================
     /**
-     * Recursively calculates the depth of a node (longest path from an input).
-     * Uses memoization to avoid redundant calculations.
+     * Recursively calculates node depth, using a path set to prevent infinite loops from cycles.
+     * @param nodeId The ID of the node to calculate the depth for.
+     * @param path A set of node IDs in the current recursive call chain.
+     * @return The calculated depth of the node.
      */
-    private int calculateNodeDepth(int nodeId) {
+    private int calculateNodeDepth(int nodeId, Set<Integer> path) {
+        // 1. Check memoization cache first for performance
         if (nodeDepths.containsKey(nodeId)) {
             return nodeDepths.get(nodeId);
         }
+
+        // 2. Check for cycles. If we're already in the path, stop.
+        if (path.contains(nodeId)) {
+            return 0; // Return a default depth to break the cycle
+        }
+
         NodeGene node = genomeToDraw.getNodes().get(nodeId);
         if (node.type() == NodeType.INPUT) {
             nodeDepths.put(nodeId, 0);
             return 0;
         }
 
-        int maxDepth = -1;
+        // Add current node to the path for this recursive branch
+        path.add(nodeId);
+
+        int maxDepth = 0;
         for (ConnectionGene conn : genomeToDraw.getConnections().values()) {
             if (conn.isEnabled() && conn.getOutNodeId() == nodeId) {
-                maxDepth = Math.max(maxDepth, calculateNodeDepth(conn.getInNodeId()));
+                maxDepth = Math.max(maxDepth, calculateNodeDepth(conn.getInNodeId(), path));
             }
         }
 
+        // IMPORTANT: Remove current node from the path before returning.
+        // This allows other branches of the recursion to traverse it.
+        path.remove(nodeId);
+
         int finalDepth = maxDepth + 1;
-        nodeDepths.put(nodeId, finalDepth);
+        nodeDepths.put(nodeId, finalDepth); // Store result in cache
         return finalDepth;
     }
 
+    // ... (drawConnections and drawNodes methods remain unchanged) ...
     private void drawConnections(Graphics2D g2d) {
         for (ConnectionGene conn : genomeToDraw.getConnections().values()) {
             if (!conn.isEnabled()) continue;
@@ -155,11 +157,10 @@ public class GenomeVisualizer extends JPanel {
             int nodeId = entry.getKey();
             Point p = entry.getValue();
             NodeGene node = genomeToDraw.getNodes().get(nodeId);
-
             switch (node.type()) {
-                case INPUT -> g2d.setColor(new Color(0x1E88E5));  // Blue
-                case OUTPUT -> g2d.setColor(new Color(0xE53935)); // Red
-                case HIDDEN -> g2d.setColor(new Color(0x6D4C41)); // Brown
+                case INPUT -> g2d.setColor(new Color(0x1E88E5));
+                case OUTPUT -> g2d.setColor(new Color(0xE53935));
+                case HIDDEN -> g2d.setColor(new Color(0x6D4C41));
             }
             g2d.fillOval(p.x - 7, p.y - 7, 14, 14);
             g2d.setColor(Color.BLACK);

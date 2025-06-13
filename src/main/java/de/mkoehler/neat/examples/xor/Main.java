@@ -12,7 +12,7 @@ public class Main {
         NEATConfig config = new NEATConfig(2, 1); // 2 inputs, 1 output for XOR
 
         // 2. Create a fitness evaluator
-        XorEvaluator evaluator = new XorEvaluator();
+        XorEvaluator evaluator = new XorEvaluator(config);
 
         // 3. Create a population
         Population population = new Population(config, evaluator);
@@ -37,7 +37,7 @@ public class Main {
 
         // 5. Test the best genome
         System.out.println("\n--- Testing Best Genome ---");
-        NeuralNetwork bestNetwork = NeuralNetwork.create(bestGenome);
+        NeuralNetwork bestNetwork = NeuralNetwork.create(bestGenome, config);
         testNetwork(bestNetwork, new double[]{0, 0}, 0); // Expected output for {0,0} is 0
         testNetwork(bestNetwork, new double[]{0, 1}, 1); // Expected output for {0,1} is 1
         testNetwork(bestNetwork, new double[]{1, 0}, 1); // Expected output for {1,0} is 1

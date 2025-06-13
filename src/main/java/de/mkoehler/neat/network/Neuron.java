@@ -13,6 +13,7 @@ public class Neuron {
     private final int id;
     @Getter
     private final NodeType type;
+    @Getter
     private final List<Synapse> inputSynapses = new ArrayList<>();
     @Setter
     @Getter

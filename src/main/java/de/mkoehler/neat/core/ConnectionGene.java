@@ -1,22 +1,21 @@
 package de.mkoehler.neat.core;
 
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-@Getter
-@ToString
-@EqualsAndHashCode
+@Data
+@NoArgsConstructor
 public class ConnectionGene {
 
-    private final int inNodeId;
-    private final int outNodeId;
-    private final int innovationNumber;
+    private int inNodeId;
+    private int outNodeId;
+    private int innovationNumber;
 
-    @Setter
     private double weight;
-    @Setter
     private boolean enabled;
 
     public ConnectionGene(int inNodeId, int outNodeId, double weight, boolean enabled, int innovationNumber) {

@@ -1,5 +1,8 @@
 package de.mkoehler.neat.network;
 
+import lombok.Getter;
+
+@Getter
 public class Synapse {
     private final Neuron fromNeuron;
     private final double weight;
