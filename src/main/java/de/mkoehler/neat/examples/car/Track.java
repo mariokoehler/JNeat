@@ -1,10 +1,7 @@
 // File: src/main/java/de/mkoehler/neat/examples/car/Track.java
 package de.mkoehler.neat.examples.car;
 
-import java.awt.Rectangle;
-import java.awt.geom.Path2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
+import java.awt.geom.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,14 +13,13 @@ public class Track {
     private final Path2D outerBoundary;
     private final Path2D innerBoundary;
     private final Path2D fullTrackShape;
-    private final List<Rectangle2D> checkpoints;
+    private final List<Line2D> checkpoints; // CHANGED from Rectangle2D to Line2D
     private final Point2D startPosition;
     private final double startAngle;
 
     public Track() {
         this.outerBoundary = new Path2D.Double();
         this.innerBoundary = new Path2D.Double();
-        this.checkpoints = new ArrayList<>();
 
         // Define a sample track shape
         outerBoundary.moveTo(100, 100);
@@ -42,29 +38,70 @@ public class Track {
         this.fullTrackShape = new Path2D.Double(outerBoundary);
         this.fullTrackShape.append(innerBoundary, false);
 
-        // Define checkpoints
-        checkpoints.add(new Rectangle(350, 50, 20, 150));
-        checkpoints.add(new Rectangle(650, 200, 100, 20));
-        checkpoints.add(new Rectangle(600, 450, 20, 150));
-        checkpoints.add(new Rectangle(200, 500, 150, 20));
-        checkpoints.add(new Rectangle(100, 200, 20, 150));
+        // --- START OF FIX: Procedurally generate checkpoints ---
+        this.checkpoints = generateCheckpoints(10); // Generate 10 checkpoints
+        // --- END OF FIX ---
 
         // Start position and angle for the car
         this.startPosition = new Point2D.Double(150, 150);
         this.startAngle = 0; // Pointing right
     }
 
+    // UPDATED getter
+    public List<Line2D> getCheckpoints() { return checkpoints; }
+
+    // --- NEW METHOD to generate checkpoints ---
+    private List<Line2D> generateCheckpoints(int count) {
+        List<Line2D> generated = new ArrayList<>();
+        List<Point2D> outerPoints = getPointsFromPath(outerBoundary);
+        List<Point2D> innerPoints = getPointsFromPath(innerBoundary);
+
+        if (outerPoints.isEmpty() || innerPoints.isEmpty()) {
+            return generated;
+        }
+
+        int step = outerPoints.size() / count;
+        for (int i = 0; i < count; i++) {
+            Point2D outerPoint = outerPoints.get(i * step);
+            Point2D closestInnerPoint = findClosestPoint(outerPoint, innerPoints);
+            generated.add(new Line2D.Double(outerPoint, closestInnerPoint));
+        }
+        return generated;
+    }
+
+    private List<Point2D> getPointsFromPath(Path2D path) {
+        List<Point2D> points = new ArrayList<>();
+        // A FlatteningPathIterator approximates curves with straight line segments
+        PathIterator pi = path.getPathIterator(null, 1.0); // 1.0 is flatness
+        double[] coords = new double[6];
+        while (!pi.isDone()) {
+            int type = pi.currentSegment(coords);
+            if (type == PathIterator.SEG_LINETO || type == PathIterator.SEG_MOVETO) {
+                points.add(new Point2D.Double(coords[0], coords[1]));
+            }
+            pi.next();
+        }
+        return points;
+    }
+
+    private Point2D findClosestPoint(Point2D from, List<Point2D> toPoints) {
+        Point2D closest = null;
+        double minDistanceSq = Double.POSITIVE_INFINITY;
+        for (Point2D p : toPoints) {
+            double distSq = from.distanceSq(p);
+            if (distSq < minDistanceSq) {
+                minDistanceSq = distSq;
+                closest = p;
+            }
+        }
+        return closest;
+    }
+
+    // --- Unchanged methods below ---
     public Path2D getOuterBoundary() { return outerBoundary; }
     public Path2D getInnerBoundary() { return innerBoundary; }
-    public List<Rectangle2D> getCheckpoints() { return checkpoints; }
     public Point2D getStartPosition() { return startPosition; }
     public double getStartAngle() { return startAngle; }
-
-    /**
-     * Checks if a given point is within the track boundaries.
-     * @param point The point to check.
-     * @return true if the point is on the track, false otherwise.
-     */
     public boolean contains(Point2D point) {
         return fullTrackShape.contains(point) && !innerBoundary.contains(point);
     }

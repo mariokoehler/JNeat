@@ -111,6 +111,19 @@ public abstract class AbstractNeatExample {
     }
 
     /**
+     * Determines whether the final best genome should be pruned before demonstration.
+     * Pruning removes disabled connections and unused nodes.
+     * <p>
+     * Override and return {@code false} for problems where the absolute identity
+     * and count of input/output nodes is semantically important (e.g., sensor arrays).
+     *
+     * @return {@code true} to prune the genome, {@code false} to use it as-is.
+     */
+    protected boolean shouldPruneFinalGenome() {
+        return true; // Default behavior is to prune for cleaner topology.
+    }
+
+    /**
      * The main entry point to start the evolution process.
      *
      * @param args Command-line arguments. Use "--genome <filepath>" to seed the run.
@@ -157,15 +170,20 @@ public abstract class AbstractNeatExample {
 
         // 3. Post-Evolution
         if (allTimeBest != null) {
-            Genome prunedBest = allTimeBest.getAsPruned();
-            System.out.println("\n--- Pruned Final Genome Topology ---");
-            System.out.println(prunedBest.getTopologyString());
+            Genome finalGenome = allTimeBest;
+            if (shouldPruneFinalGenome()) {
+                finalGenome = allTimeBest.getAsPruned();
+                System.out.println("\n--- Pruned Final Genome Topology ---");
+            } else {
+                System.out.println("\n--- Final Genome Topology (Unpruned) ---");
+            }
+            System.out.println(finalGenome.getTopologyString());
 
-            saveGenomeToFile(prunedBest);
-            topologyVisualizer.updateVisuals(prunedBest);
+            saveGenomeToFile(finalGenome); // Save the version we are about to demonstrate
+            topologyVisualizer.updateVisuals(finalGenome);
 
             System.out.println("\n--- Demonstrating All-Time Best Genome ---");
-            demonstrate(prunedBest, config);
+            demonstrate(finalGenome, config); // Pass the final (maybe-pruned) genome
         } else {
             System.out.println("No viable genome was evolved or found.");
         }

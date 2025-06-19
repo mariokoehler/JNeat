@@ -5,7 +5,7 @@ import de.mkoehler.neat.config.NEATConfig;
 import de.mkoehler.neat.core.Genome;
 import de.mkoehler.neat.evolution.FitnessEvaluator;
 import de.mkoehler.neat.network.NeuralNetwork;
-import java.awt.geom.Rectangle2D;
+import java.awt.geom.Line2D; // <-- ADD THIS IMPORT
 import java.util.List;
 
 public class CarRacingEvaluator implements FitnessEvaluator {
@@ -38,38 +38,35 @@ public class CarRacingEvaluator implements FitnessEvaluator {
             int timeSinceLastCheckpoint = 0;
 
             for (int step = 0; step < MAX_TIME_STEPS; step++) {
-                if (car.isCrashed || timeSinceLastCheckpoint > 300) { // Timeout if stuck
+                if (car.isCrashed || timeSinceLastCheckpoint > 300) {
                     break;
                 }
 
-                // Get network inputs from car sensors
                 car.castRays(track);
                 double[] inputs = car.sensorReadings.stream().mapToDouble(d -> d).toArray();
 
-                // Activate network and get outputs
                 double[] output = net.activate(inputs);
-                double steering = output[0] * 2 - 1; // Map [0,1] to [-1,1]
-                double acceleration = output[1];      // Map [0,1] to [0,1]
+                double steering = output[0] * 2 - 1;
+                double acceleration = output[1];
 
-                // Update car state
                 car.update(steering, acceleration, track);
 
-                // Update fitness
-                fitness += car.speed * 0.1; // Small reward for speed
+                fitness += car.speed * 0.1;
                 timeSinceLastCheckpoint++;
 
-                // Check for checkpoint
-                Rectangle2D nextCheckpoint = track.getCheckpoints().get(nextCheckpointIndex);
-                if (nextCheckpoint.contains(car.position)) {
+                Line2D nextCheckpoint = track.getCheckpoints().get(nextCheckpointIndex);
+                Line2D carMovement = new Line2D.Double(car.previousPosition, car.position);
+
+                if (nextCheckpoint.intersectsLine(carMovement)) {
                     fitness += CHECKPOINT_REWARD;
                     nextCheckpointIndex = (nextCheckpointIndex + 1) % track.getCheckpoints().size();
-                    timeSinceLastCheckpoint = 0; // Reset timer
+                    timeSinceLastCheckpoint = 0;
                 }
             }
 
-            // Add a final bonus for distance to the next checkpoint
-            double dist = car.position.distance(track.getCheckpoints().get(nextCheckpointIndex).getCenterX(), track.getCheckpoints().get(nextCheckpointIndex).getCenterY());
-            fitness += CHECKPOINT_REWARD - dist;
+            // Use distance from car's final position to the next checkpoint line
+            double dist = track.getCheckpoints().get(nextCheckpointIndex).ptSegDist(car.position);
+            fitness += (CHECKPOINT_REWARD / 2.0) - dist; // Use a smaller bonus here
 
             genome.setFitness(Math.max(0, fitness));
         }

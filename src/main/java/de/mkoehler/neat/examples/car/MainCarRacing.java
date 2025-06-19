@@ -17,7 +17,7 @@ public class MainCarRacing extends AbstractNeatExample {
 
     public static void main(String[] args) {
         MainCarRacing challenge = new MainCarRacing();
-        challenge.run(args, 500, 25); // Run for 500 generations
+        challenge.run(args, 10, 25);
     }
 
     @Override
@@ -30,6 +30,13 @@ public class MainCarRacing extends AbstractNeatExample {
                 .speciesStagnationLimit(20)
                 .allowRecurrent(false) // Feed-forward is likely sufficient
                 .build();
+    }
+
+    @Override
+    protected boolean shouldPruneFinalGenome() {
+        // For this problem, the number and order of sensors is critical.
+        // Pruning would change the meaning of the inputs.
+        return false;
     }
 
     @Override

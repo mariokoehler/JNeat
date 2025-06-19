@@ -18,6 +18,7 @@ public class Car {
 
     // --- Car properties ---
     public Point2D.Double position;
+    public Point2D.Double previousPosition;
     public double angle; // in radians
     public double speed;
     public boolean isCrashed = false;
@@ -29,9 +30,11 @@ public class Car {
     private final double sensorRange;
     public final List<Double> sensorReadings;
     public final List<Line2D> sensorRays; // For visualization
+    public final List<Point2D> sensorIntersectionPoints;
 
     public Car(Point2D startPos, double startAngle, int numSensors) {
         this.position = new Point2D.Double(startPos.getX(), startPos.getY());
+        this.previousPosition = new Point2D.Double(startPos.getX(), startPos.getY());
         this.angle = startAngle;
         this.speed = 0;
         this.shape = new Rectangle2D.Double(-10, -5, 20, 10); // Car shape relative to its center
@@ -41,9 +44,11 @@ public class Car {
         this.sensorRange = 150.0;
         this.sensorReadings = new ArrayList<>(numSensors);
         this.sensorRays = new ArrayList<>(numSensors);
+        this.sensorIntersectionPoints = new ArrayList<>(numSensors);
         for(int i = 0; i < numSensors; i++) {
             sensorReadings.add(1.0); // Default reading (no obstacle)
             sensorRays.add(new Line2D.Double());
+            sensorIntersectionPoints.add(new Point2D.Double());
         }
     }
 
@@ -52,6 +57,8 @@ public class Car {
      */
     public void update(double steering, double acceleration, Track track) {
         if (isCrashed) return;
+
+        this.previousPosition.setLocation(this.position);
 
         // --- Physics Update ---
         this.speed += acceleration;
@@ -93,11 +100,15 @@ public class Car {
 
             // Find the closest intersection with track boundaries
             Point2D closestIntersection = findIntersection(ray, track);
-            double distance = (closestIntersection != null) ? this.position.distance(closestIntersection) : sensorRange;
-
-            // Normalize the reading: 1.0 means no obstacle, 0.0 means obstacle is very close
-            sensorReadings.set(i, 1.0 - (distance / sensorRange));
-        }
+            if (closestIntersection != null) {
+                sensorIntersectionPoints.set(i, closestIntersection);
+                double distance = this.position.distance(closestIntersection);
+                sensorReadings.set(i, 1.0 - (distance / sensorRange));
+            } else {
+                // No intersection, so the "intersection point" is the end of the ray
+                sensorIntersectionPoints.set(i, ray.getP2());
+                sensorReadings.set(i, 0.0); // Network sees 0.0 (max distance)
+            }        }
     }
 
     /**
@@ -109,7 +120,8 @@ public class Car {
 
         // Check against both inner and outer boundaries
         for (Path2D boundary : List.of(track.getInnerBoundary(), track.getOuterBoundary())) {
-            PathIterator pi = boundary.getPathIterator(null);
+            PathIterator pi = boundary.getPathIterator(null, 1.0);
+
             double[] coords = new double[6];
             Point2D.Double start = new Point2D.Double();
             Point2D.Double current = new Point2D.Double();

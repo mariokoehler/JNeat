@@ -4,6 +4,7 @@ package de.mkoehler.neat.examples.car;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 
 public class CarRacingVisualizer extends JPanel {
 
@@ -29,7 +30,7 @@ public class CarRacingVisualizer extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Draw track
+        // Draw track (unchanged)
         g2d.setColor(Color.DARK_GRAY);
         g2d.fill(track.getOuterBoundary());
         g2d.setColor(getBackground());
@@ -38,25 +39,29 @@ public class CarRacingVisualizer extends JPanel {
         g2d.draw(track.getOuterBoundary());
         g2d.draw(track.getInnerBoundary());
 
-        // Draw checkpoints
-        g2d.setColor(new Color(0, 255, 0, 80));
+        g2d.setColor(new Color(0, 255, 0, 150)); // Green and slightly transparent
+        g2d.setStroke(new BasicStroke(3f));
         for (var checkpoint : track.getCheckpoints()) {
-            g2d.fill(checkpoint);
+            g2d.draw(checkpoint);
         }
 
         // Draw sensor rays
         g2d.setStroke(new BasicStroke(1f));
-        for(int i = 0; i < car.sensorRays.size(); i++) {
-            Line2D ray = car.sensorRays.get(i);
+        for (int i = 0; i < car.sensorIntersectionPoints.size(); i++) {
+            Point2D endPoint = car.sensorIntersectionPoints.get(i);
+            Line2D visibleRay = new Line2D.Double(car.position, endPoint);
+
             // Color ray based on distance (red=close, yellow=far)
-            float intensity = car.sensorReadings.get(i).floatValue();
-            g2d.setColor(new Color(1.0f, intensity, 0, 0.6f));
-            g2d.draw(ray);
+            // We use the original sensorReadings for color, as it's already normalized
+            float intensity = (1.0f - car.sensorReadings.get(i).floatValue());
+            g2d.setColor(new Color(1.0f, intensity, 0, 0.7f));
+            g2d.draw(visibleRay);
         }
 
-        // Draw car
+        // Draw car (unchanged)
         g2d.setColor(car.isCrashed ? Color.RED : Color.CYAN);
         Shape carShape = car.getTransformedShape();
         g2d.fill(carShape);
     }
+
 }
