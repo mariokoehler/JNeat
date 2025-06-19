@@ -29,7 +29,7 @@ public class Species {
         if (offspringCount == 0) return offspring;
 
         // Elitism: carry over the best genome of the species
-        int eliteCount = (int) Math.ceil(members.size() * config.speciesElitism);
+        int eliteCount = (int) Math.ceil(members.size() * config.getSpeciesElitism());
         if (eliteCount > offspringCount) eliteCount = offspringCount;
 
         members.sort(Comparator.comparingDouble(Genome::getFitness).reversed()); // Best fitness first
@@ -39,7 +39,7 @@ public class Species {
 
         for (int i = 0; i < offspringCount - eliteCount; i++) {
             Genome child;
-            if (random.nextDouble() < config.crossoverRate && members.size() > 1) {
+            if (random.nextDouble() < config.getCrossoverRate() && members.size() > 1) {
                 Genome parent1 = selectParent(random);
                 Genome parent2 = selectParent(random);
                 child = Genome.crossover(parent1, parent2, random);

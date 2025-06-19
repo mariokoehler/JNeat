@@ -9,8 +9,6 @@ import de.mkoehler.neat.evolution.Population;
 import de.mkoehler.neat.network.NeuralNetwork;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,47 +17,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Random;
-
-// Visualizer Panel Class
-class MemoryVisualizer extends JPanel {
-    private MemoryEnvironment env;
-
-    public MemoryVisualizer() {
-        setPreferredSize(new Dimension(500, 500));
-        setBackground(Color.DARK_GRAY);
-    }
-
-    public void updateEnvironment(MemoryEnvironment env) {
-        this.env = env;
-        repaint();
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if (env == null) return;
-
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        // Draw Food (Green)
-        g2d.setColor(Color.GREEN);
-        Point2D.Double foodPos = env.foodPos;
-        g2d.fillOval((int)foodPos.x - 10, (int)foodPos.y - 10, 20, 20);
-
-        // Draw Goal (Blue), only if active
-        if (env.goalActive) {
-            g2d.setColor(Color.CYAN);
-            Point2D.Double goalPos = env.goalPos;
-            g2d.fillOval((int)goalPos.x - 10, (int)goalPos.y - 10, 20, 20);
-        }
-
-        // Draw Agent (White)
-        g2d.setColor(Color.WHITE);
-        Point2D.Double agentPos = env.agentPos;
-        g2d.fillOval((int)agentPos.x - 8, (int)agentPos.y - 8, 16, 16);
-    }
-}
 
 // Main Application Class
 public class MainMemoryChallenge {
@@ -90,10 +47,13 @@ public class MainMemoryChallenge {
         }
 
         // 1. Configure NEAT for the Memory Challenge
-        NEATConfig config = new NEATConfig(6, 2); // 6 inputs, 2 outputs
-        config.populationSize = 250;
-        config.allowRecurrent = true; // THIS IS THE CRITICAL SWITCH
-        config.compatibilityThreshold = 4.0;
+        NEATConfig config = NEATConfig.builder()
+                .inputNodes(6)
+                .outputNodes(2)
+                .populationSize(250)
+                .allowRecurrent(true)
+                .compatibilityThreshold(4.0)
+                .build();
 
         // 2. Create the evaluators
         FitnessEvaluator evaluator = new MemoryEvaluator(config);
@@ -107,7 +67,7 @@ public class MainMemoryChallenge {
             population.getGenomes().clear();
             population.getGenomes().add(seedGenome); // Add the original
             Random random = new Random();
-            for (int i = 1; i < config.populationSize; i++) {
+            for (int i = 1; i < config.getPopulationSize(); i++) {
                 Genome mutant = seedGenome.copy();
                 // Mutate heavily to create initial diversity around the solution
                 mutant.mutate(config, population.getInnovationTracker(), random);

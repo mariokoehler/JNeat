@@ -10,8 +10,11 @@ public class MainCartPole {
 
     public static void main(String[] args) {
         // 1. Configure NEAT for the Cart-Pole problem (4 inputs, 1 output)
-        NEATConfig config = new NEATConfig(4, 1);
-        config.populationSize = 200; // A slightly larger population can be helpful
+        NEATConfig config = NEATConfig.builder()
+                .inputNodes(4)
+                .outputNodes(1)
+                .populationSize(200)
+                .build();
 
         // 2. Create our custom fitness evaluator
         FitnessEvaluator evaluator = new CartPoleEvaluator(config);

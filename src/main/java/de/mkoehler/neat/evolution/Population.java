@@ -23,25 +23,25 @@ public class Population {
     public Population(NEATConfig config, FitnessEvaluator evaluator) {
         this.config = config;
         this.evaluator = evaluator;
-        this.innovationTracker = new InnovationTracker(config.inputNodes, config.outputNodes);
+        this.innovationTracker = new InnovationTracker(config.getInputNodes(), config.getOutputNodes());
         this.genomes = new ArrayList<>();
         this.species = new ArrayList<>();
         initializePopulation();
     }
 
     private void initializePopulation() {
-        for (int i = 0; i < config.populationSize; i++) {
+        for (int i = 0; i < config.getPopulationSize(); i++) {
             Genome genome = new Genome();
             // Create input and output nodes
-            for (int j = 0; j < config.inputNodes; j++) {
+            for (int j = 0; j < config.getInputNodes(); j++) {
                 genome.addNodeGene(new NodeGene(j, NodeType.INPUT));
             }
-            for (int j = 0; j < config.outputNodes; j++) {
-                genome.addNodeGene(new NodeGene(config.inputNodes + j, NodeType.OUTPUT));
+            for (int j = 0; j < config.getOutputNodes(); j++) {
+                genome.addNodeGene(new NodeGene(config.getInputNodes() + j, NodeType.OUTPUT));
             }
             // Optional: Create one initial connection
-            int inNode = random.nextInt(config.inputNodes);
-            int outNode = config.inputNodes + random.nextInt(config.outputNodes);
+            int inNode = random.nextInt(config.getInputNodes());
+            int outNode = config.getInputNodes() + random.nextInt(config.getOutputNodes());
             int innovation = innovationTracker.getInnovationNumber(inNode, outNode);
             genome.addConnectionGene(new de.mkoehler.neat.core.ConnectionGene(inNode, outNode, random.nextDouble() * 2 - 1, true, innovation));
             genomes.add(genome);
@@ -64,7 +64,7 @@ public class Population {
         for (Genome g : genomes) {
             boolean foundSpecies = false;
             for (Species s : species) {
-                if (Genome.getCompatibilityDistance(g, s.getRepresentative(), config) < config.compatibilityThreshold) {
+                if (Genome.getCompatibilityDistance(g, s.getRepresentative(), config) < config.getCompatibilityThreshold()) {
                     s.addMember(g);
                     foundSpecies = true;
                     break;
@@ -87,7 +87,7 @@ public class Population {
 
         // Cull stagnant species
         if(species.size() > 1) {
-            species.removeIf(s -> s.getGenerationsWithoutImprovement() > config.speciesStagnationLimit);
+            species.removeIf(s -> s.getGenerationsWithoutImprovement() > config.getSpeciesStagnationLimit());
         }
     }
 
@@ -100,7 +100,7 @@ public class Population {
         List<Genome> nextGeneration = new ArrayList<>();
         for (Species s : species) {
             double speciesAdjustedFitnessSum = s.getMembers().stream().mapToDouble(Genome::getAdjustedFitness).sum();
-            int offspringCount = (int) Math.round((speciesAdjustedFitnessSum / totalAdjustedFitnessSum) * config.populationSize);
+            int offspringCount = (int) Math.round((speciesAdjustedFitnessSum / totalAdjustedFitnessSum) * config.getPopulationSize());
 
             if(offspringCount > 0){
                 nextGeneration.addAll(s.generateOffspring(offspringCount, config, innovationTracker, random));
@@ -108,7 +108,7 @@ public class Population {
         }
 
         // Refill if rounding caused a shortfall
-        while (nextGeneration.size() < config.populationSize) {
+        while (nextGeneration.size() < config.getPopulationSize()) {
             if (!species.isEmpty()) {
                 Species s = species.get(random.nextInt(species.size()));
                 nextGeneration.addAll(s.generateOffspring(1, config, innovationTracker, random));
@@ -119,7 +119,7 @@ public class Population {
             }
         }
 
-        genomes = nextGeneration.stream().limit(config.populationSize).collect(Collectors.toList());
+        genomes = nextGeneration.stream().limit(config.getPopulationSize()).collect(Collectors.toList());
     }
 
     public Genome getBestGenome() {

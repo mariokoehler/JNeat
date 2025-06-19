@@ -78,16 +78,16 @@ public class Genome {
     }
 
     public void mutate(NEATConfig config, InnovationTracker innovationTracker, Random random) {
-        if (random.nextDouble() < config.mutateWeightRate) {
+        if (random.nextDouble() < config.getMutateWeightRate()) {
             mutateWeight(config, random);
         }
-        if (random.nextDouble() < config.addConnectionRate) {
+        if (random.nextDouble() < config.getAddConnectionRate()) {
             mutateAddConnection(config, innovationTracker, random);
         }
-        if (random.nextDouble() < config.addNodeRate) {
+        if (random.nextDouble() < config.getAddNodeRate()) {
             mutateAddNode(config, innovationTracker, random);
         }
-        if (random.nextDouble() < config.toggleEnableRate) {
+        if (random.nextDouble() < config.getToggleEnableRate()) {
             mutateToggleEnable(random);
         }
     }
@@ -96,10 +96,10 @@ public class Genome {
         if (connections.isEmpty()) return;
         List<ConnectionGene> connectionList = new ArrayList<>(connections.values());
         ConnectionGene gene = connectionList.get(random.nextInt(connectionList.size()));
-        if (random.nextDouble() < config.weightShiftRate) {
-            gene.setWeight(gene.getWeight() + (random.nextDouble() * 2 - 1) * config.weightShiftStrength);
+        if (random.nextDouble() < config.getWeightShiftRate()) {
+            gene.setWeight(gene.getWeight() + (random.nextDouble() * 2 - 1) * config.getWeightShiftStrength());
         } else {
-            gene.setWeight(random.nextDouble() * config.newConnectionWeightRange * 2 - config.newConnectionWeightRange);
+            gene.setWeight(random.nextDouble() * config.getNewConnectionWeightRange() * 2 - config.getNewConnectionWeightRange());
         }
     }
 
@@ -117,7 +117,7 @@ public class Genome {
         if (possibleInputs.isEmpty() || possibleOutputs.isEmpty()) return;
 
         // Use the configurable number of attempts
-        for (int i = 0; i < config.addConnectionAttempts; i++) {
+        for (int i = 0; i < config.getAddConnectionAttempts(); i++) {
             NodeGene node1 = possibleInputs.get(random.nextInt(possibleInputs.size()));
             NodeGene node2 = possibleOutputs.get(random.nextInt(possibleOutputs.size()));
 
@@ -125,11 +125,11 @@ public class Genome {
                 continue;
             }
 
-            if (!config.allowRecurrent && isPathExists(node2.id(), node1.id())) {
+            if (!config.isAllowRecurrent() && isPathExists(node2.id(), node1.id())) {
                 continue;
             }
             // Use the configurable weight range
-            double weight = random.nextDouble() * config.newConnectionWeightRange * 2 - config.newConnectionWeightRange;
+            double weight = random.nextDouble() * config.getNewConnectionWeightRange() * 2 - config.getNewConnectionWeightRange();
             int innovation = innovationTracker.getInnovationNumber(node1.id(), node2.id());
             addConnectionGene(new ConnectionGene(node1.id(), node2.id(), weight, true, innovation));
             return;
@@ -139,7 +139,7 @@ public class Genome {
     /**
      * Checks if a path exists from a start node to an end node in the genome's graph.
      * This is used to prevent the creation of cycles during mutation.
-     *
+     * <p>
      * IMPORTANT: This check ignores the 'enabled' status of connections, as a disabled
      * connection could be re-enabled later, creating a cycle. It checks the pure topology.
      *
@@ -202,7 +202,7 @@ public class Genome {
         int in1 = innovationTracker.getInnovationNumber(oldConnection.getInNodeId(), newNodeId);
         int in2 = innovationTracker.getInnovationNumber(newNodeId, oldConnection.getOutNodeId());
 
-        addConnectionGene(new ConnectionGene(oldConnection.getInNodeId(), newNodeId, config.addNodeNewLinkWeight, true, in1));
+        addConnectionGene(new ConnectionGene(oldConnection.getInNodeId(), newNodeId, config.getAddNodeNewLinkWeight(), true, in1));
         addConnectionGene(new ConnectionGene(newNodeId, oldConnection.getOutNodeId(), oldConnection.getWeight(), true, in2));
     }
 
@@ -257,9 +257,9 @@ public class Genome {
         int N = Math.max(g1.connections.size(), g2.connections.size());
         if (N < 20) N = 1; // Avoid over-penalizing small genomes
 
-        return (config.C1_EXCESS * excessGenes / N) +
-                (config.C2_DISJOINT * disjointGenes / N) +
-                (config.C3_WEIGHTS * (matchingGenes > 0 ? weightDiff / matchingGenes : 0));
+        return (config.getC1_EXCESS() * excessGenes / N) +
+                (config.getC2_DISJOINT() * disjointGenes / N) +
+                (config.getC3_WEIGHTS() * (matchingGenes > 0 ? weightDiff / matchingGenes : 0));
     }
 
     public void addNodeGene(NodeGene node) {

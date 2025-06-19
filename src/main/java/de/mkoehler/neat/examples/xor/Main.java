@@ -9,7 +9,10 @@ import java.util.Arrays;
 public class Main {
     public static void main(String[] args) {
         // 1. Configure NEAT
-        NEATConfig config = new NEATConfig(2, 1); // 2 inputs, 1 output for XOR
+        NEATConfig config = NEATConfig.builder()
+                .inputNodes(2)
+                .outputNodes(1)
+                .build();
 
         // 2. Create a fitness evaluator
         XorEvaluator evaluator = new XorEvaluator(config);

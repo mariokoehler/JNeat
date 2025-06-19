@@ -1,5 +1,6 @@
 package de.mkoehler.neat.network;
 
+import de.mkoehler.neat.config.NEATConfig;
 import de.mkoehler.neat.core.ConnectionGene;
 import de.mkoehler.neat.core.Genome;
 import de.mkoehler.neat.core.NodeGene;
@@ -44,7 +45,7 @@ class NeuralNetworkTest {
     @DisplayName("Should create a minimal network from a simple genome")
     void testCreateMinimalNetwork() {
         // Act & Assert
-        assertNotNull(NeuralNetwork.create(simpleGenome),
+        assertNotNull(NeuralNetwork.create(simpleGenome, NEATConfig.builder().build() ),
                 "Network creation should not fail for a valid minimal genome.");
     }
 
@@ -68,7 +69,7 @@ class NeuralNetworkTest {
     @DisplayName("Should activate a minimal network correctly")
     void testActivateMinimalNetwork() {
         // Arrange
-        NeuralNetwork net = NeuralNetwork.create(simpleGenome);
+        NeuralNetwork net = NeuralNetwork.create(simpleGenome, NEATConfig.builder().build() );
 
         // Act
         double[] output = net.activate(new double[]{1.0, 0.0});
@@ -113,7 +114,7 @@ class NeuralNetworkTest {
         hiddenNodeGenome.addNodeGene(new NodeGene(3, NodeType.HIDDEN));
         hiddenNodeGenome.addConnectionGene(new ConnectionGene(0, 3, 0.5, true, 0));
         hiddenNodeGenome.addConnectionGene(new ConnectionGene(3, 2, 0.8, true, 1));
-        NeuralNetwork net = NeuralNetwork.create(hiddenNodeGenome);
+        NeuralNetwork net = NeuralNetwork.create(hiddenNodeGenome, NEATConfig.builder().build() );
 
         // Act
         double[] output = net.activate(new double[]{1.0, 0.0});
@@ -158,7 +159,7 @@ class NeuralNetworkTest {
 
         // Act & Assert
         assertThrows(IllegalStateException.class,
-                () -> NeuralNetwork.create(cycleGenome),
+                () -> NeuralNetwork.create(cycleGenome, NEATConfig.builder().build() ),
                 "Should throw an exception for a network with a cycle.");
     }
 
@@ -181,7 +182,7 @@ class NeuralNetworkTest {
     @DisplayName("Activate should throw IllegalArgumentException for incorrect input size")
     void testActivateWithIncorrectInputSize() {
         // Arrange
-        NeuralNetwork net = NeuralNetwork.create(simpleGenome); // This network expects 2 inputs
+        NeuralNetwork net = NeuralNetwork.create(simpleGenome, NEATConfig.builder().build() ); // This network expects 2 inputs
         double[] badInput = {1.0};
 
         // Act & Assert

@@ -31,9 +31,12 @@ public class MainCartPoleCentering {
 
     public void runEvolution() {
         // ... (NEAT configuration and population setup is the same)
-        NEATConfig config = new NEATConfig(4, 1);
-        config.populationSize = 250;
-        config.compatibilityThreshold = 3.5;
+        NEATConfig config = NEATConfig.builder()
+                .inputNodes(4)
+                .outputNodes(1)
+                .populationSize(250)
+                .compatibilityThreshold(3.5)
+                .build();
         FitnessEvaluator evaluator = new CartPoleRobustnessEvaluator(config);
         Population population = new Population(config, evaluator);
 

@@ -58,12 +58,12 @@ public class NeuralNetwork {
         }
 
         List<Neuron> sortedNeurons = null;
-        if (!config.allowRecurrent) {
+        if (!config.isAllowRecurrent()) {
             // If feed-forward, we use the high-performance topological sort
             sortedNeurons = topologicalSort(neuronMap, genome);
         }
 
-        return new NeuralNetwork(allNeurons, sortedNeurons, inputs, outputs, config.allowRecurrent);
+        return new NeuralNetwork(allNeurons, sortedNeurons, inputs, outputs, config.isAllowRecurrent());
     }
 
     /**
