@@ -17,13 +17,13 @@ public class MainCarRacing extends AbstractNeatExample {
 
     public static void main(String[] args) {
         MainCarRacing challenge = new MainCarRacing();
-        challenge.run(args, 10, 25);
+        challenge.run(args, 100, 25);
     }
 
     @Override
     protected NEATConfig createNeatConfig() {
         return NEATConfig.builder()
-                .inputNodes(5) // 5 sensors
+                .inputNodes(3) // 5 sensors
                 .outputNodes(2) // steering and acceleration
                 .populationSize(200)
                 .compatibilityThreshold(4.0)

@@ -1,0 +1,106 @@
+{
+  "nodes" : {
+    "0" : {
+      "id" : 0,
+      "type" : "INPUT"
+    },
+    "1" : {
+      "id" : 1,
+      "type" : "INPUT"
+    },
+    "2" : {
+      "id" : 2,
+      "type" : "INPUT"
+    },
+    "3" : {
+      "id" : 3,
+      "type" : "OUTPUT"
+    },
+    "4" : {
+      "id" : 4,
+      "type" : "OUTPUT"
+    },
+    "538" : {
+      "id" : 538,
+      "type" : "HIDDEN"
+    },
+    "77" : {
+      "id" : 77,
+      "type" : "HIDDEN"
+    }
+  },
+  "connections" : {
+    "1" : {
+      "inNodeId" : 1,
+      "outNodeId" : 3,
+      "innovationNumber" : 1,
+      "weight" : 1.4019503526305748,
+      "enabled" : false
+    },
+    "2" : {
+      "inNodeId" : 0,
+      "outNodeId" : 4,
+      "innovationNumber" : 2,
+      "weight" : -0.5754681962078239,
+      "enabled" : false
+    },
+    "19" : {
+      "inNodeId" : 4,
+      "outNodeId" : 3,
+      "innovationNumber" : 19,
+      "weight" : -0.4748345459450945,
+      "enabled" : false
+    },
+    "228" : {
+      "inNodeId" : 2,
+      "outNodeId" : 3,
+      "innovationNumber" : 228,
+      "weight" : -0.07788147034505874,
+      "enabled" : true
+    },
+    "229" : {
+      "inNodeId" : 0,
+      "outNodeId" : 77,
+      "innovationNumber" : 229,
+      "weight" : 1.2117182853201593,
+      "enabled" : true
+    },
+    "230" : {
+      "inNodeId" : 77,
+      "outNodeId" : 4,
+      "innovationNumber" : 230,
+      "weight" : 0.586942796940003,
+      "enabled" : true
+    },
+    "423" : {
+      "inNodeId" : 2,
+      "outNodeId" : 77,
+      "innovationNumber" : 423,
+      "weight" : -1.2991527340525177,
+      "enabled" : true
+    },
+    "479" : {
+      "inNodeId" : 77,
+      "outNodeId" : 3,
+      "innovationNumber" : 479,
+      "weight" : 1.886700843257517,
+      "enabled" : true
+    },
+    "1769" : {
+      "inNodeId" : 4,
+      "outNodeId" : 538,
+      "innovationNumber" : 1769,
+      "weight" : 1.0,
+      "enabled" : true
+    },
+    "1770" : {
+      "inNodeId" : 538,
+      "outNodeId" : 3,
+      "innovationNumber" : 1770,
+      "weight" : -0.08635894409919587,
+      "enabled" : true
+    }
+  },
+  "fitness" : 61390.71006058544,
+  "adjustedFitness" : 1334.580653490988
+}
