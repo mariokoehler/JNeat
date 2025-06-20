@@ -56,8 +56,8 @@ public class CarRacingEvaluator implements FitnessEvaluator {
                 double[] inputs = car.sensorReadings.stream().mapToDouble(d -> d).toArray();
 
                 double[] output = net.activate(inputs);
-                double steering = output[0] * 2 - 1;
-                double acceleration = output[1];
+                double steering = output[0];           // No transformation needed, it's already [-1, 1]
+                double acceleration = (output[1] + 1) / 2.0; // Transform [-1, 1] to [0, 1] for throttle
 
                 car.update(steering, acceleration, track);
 

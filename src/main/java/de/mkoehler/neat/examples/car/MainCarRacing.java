@@ -6,6 +6,7 @@ import de.mkoehler.neat.core.Genome;
 import de.mkoehler.neat.core.NodeType;
 import de.mkoehler.neat.examples.AbstractNeatExample;
 import de.mkoehler.neat.evolution.FitnessEvaluator;
+import de.mkoehler.neat.network.ActivationFunction;
 import de.mkoehler.neat.network.NeuralNetwork;
 
 import javax.swing.*;
@@ -17,7 +18,7 @@ public class MainCarRacing extends AbstractNeatExample {
 
     public static void main(String[] args) {
         MainCarRacing challenge = new MainCarRacing();
-        challenge.run(args, 500, 25);
+        challenge.run(args, 250, 25);
     }
 
     @Override
@@ -29,6 +30,8 @@ public class MainCarRacing extends AbstractNeatExample {
                 .compatibilityThreshold(4.0)
                 .speciesStagnationLimit(20)
                 .allowRecurrent(false) // Feed-forward is likely sufficient
+                .hiddenActivationFunction(ActivationFunction.LEAKY_RELU)
+                .outputActivationFunction(ActivationFunction.TANH)
                 .build();
     }
 

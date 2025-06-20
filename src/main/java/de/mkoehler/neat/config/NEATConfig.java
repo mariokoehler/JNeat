@@ -1,9 +1,12 @@
 package de.mkoehler.neat.config;
 
+import de.mkoehler.neat.network.ActivationFunction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.function.DoubleUnaryOperator;
 
 @Builder
 @NoArgsConstructor
@@ -44,5 +47,19 @@ public class NEATConfig {
     // Network
     @Builder.Default private int inputNodes = 2;
     @Builder.Default private int outputNodes = 1;
+
+    /**
+     * The activation function to be used by all hidden neurons.
+     * Defaults to the traditional {@link ActivationFunction#SIGMOID}.
+     */
+    @Builder.Default
+    private DoubleUnaryOperator hiddenActivationFunction = ActivationFunction.SIGMOID;
+
+    /**
+     * The activation function to be used by all output neurons.
+     * Defaults to the traditional {@link ActivationFunction#SIGMOID}.
+     */
+    @Builder.Default
+    private DoubleUnaryOperator outputActivationFunction = ActivationFunction.SIGMOID;
 
 }
