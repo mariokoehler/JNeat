@@ -5,7 +5,8 @@ import de.mkoehler.neat.config.NEATConfig;
 import de.mkoehler.neat.core.Genome;
 import de.mkoehler.neat.evolution.FitnessEvaluator;
 import de.mkoehler.neat.network.NeuralNetwork;
-import java.awt.geom.Line2D; // <-- ADD THIS IMPORT
+import java.awt.geom.Line2D;
+import java.util.Collections;
 import java.util.List;
 
 public class CarRacingEvaluator implements FitnessEvaluator {
@@ -23,15 +24,24 @@ public class CarRacingEvaluator implements FitnessEvaluator {
 
     @Override
     public void evaluatePopulation(List<Genome> population) {
-        for (Genome genome : population) {
+        // --- START OF PARALLELIZATION ---
+        // Use a parallel stream to evaluate genomes concurrently.
+        // This will automatically use multiple CPU cores.
+        population.parallelStream().forEach(genome -> {
+            // The entire evaluation logic for a single genome is now inside this lambda.
+
             NeuralNetwork net;
             try {
                 net = NeuralNetwork.create(genome, config);
             } catch (Exception e) {
                 genome.setFitness(0);
-                continue;
+                // 'continue' is not allowed in a lambda, so we use 'return' to exit
+                // the evaluation for this specific genome.
+                return;
             }
 
+            // Each thread gets its own instance of Car and other variables.
+            // This ensures thread safety as they don't share state.
             Car car = new Car(track.getStartPosition(), track.getStartAngle(), config.getInputNodes());
             int nextCheckpointIndex = 0;
             double fitness = 0;
@@ -52,6 +62,10 @@ public class CarRacingEvaluator implements FitnessEvaluator {
                 car.update(steering, acceleration, track);
 
                 fitness += car.speed * 0.1;
+                double maxSensorReading = Collections.max(car.sensorReadings);
+                double centerBonus = (1.0 - maxSensorReading);
+                fitness += centerBonus * 0.2;
+
                 timeSinceLastCheckpoint++;
 
                 Line2D nextCheckpoint = track.getCheckpoints().get(nextCheckpointIndex);
@@ -59,16 +73,17 @@ public class CarRacingEvaluator implements FitnessEvaluator {
 
                 if (nextCheckpoint.intersectsLine(carMovement)) {
                     fitness += CHECKPOINT_REWARD;
+                    fitness += car.speed * 10;
                     nextCheckpointIndex = (nextCheckpointIndex + 1) % track.getCheckpoints().size();
                     timeSinceLastCheckpoint = 0;
                 }
             }
 
-            // Use distance from car's final position to the next checkpoint line
             double dist = track.getCheckpoints().get(nextCheckpointIndex).ptSegDist(car.position);
-            fitness += (CHECKPOINT_REWARD / 2.0) - dist; // Use a smaller bonus here
+            fitness += (CHECKPOINT_REWARD / 2.0) - dist;
 
             genome.setFitness(Math.max(0, fitness));
-        }
+        });
+        // --- END OF PARALLELIZATION ---
     }
 }

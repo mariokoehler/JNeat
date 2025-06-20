@@ -17,7 +17,7 @@ public class MainCarRacing extends AbstractNeatExample {
 
     public static void main(String[] args) {
         MainCarRacing challenge = new MainCarRacing();
-        challenge.run(args, 100, 25);
+        challenge.run(args, 500, 25);
     }
 
     @Override
