@@ -33,6 +33,11 @@ public class MainCarRacing extends AbstractNeatExample {
     }
 
     @Override
+    protected String getGenomeFilePrefix() {
+        return "carRacing";
+    }
+
+    @Override
     protected boolean shouldPruneFinalGenome() {
         // For this problem, the number and order of sensors is critical.
         // Pruning would change the meaning of the inputs.

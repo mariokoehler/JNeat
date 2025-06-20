@@ -49,6 +49,12 @@ public abstract class AbstractNeatExample {
     protected abstract NEATConfig createNeatConfig();
 
     /**
+     * Provides a problem-specific prefix for the saved genome filename.
+     * @return A string to be used at the start of the filename (e.g., "carRacing").
+     */
+    protected abstract String getGenomeFilePrefix();
+
+    /**
      * Creates the fitness evaluator for the problem. This is the core
      * function that assigns a fitness score to each genome.
      *
@@ -129,6 +135,51 @@ public abstract class AbstractNeatExample {
      * @param args Command-line arguments. Use "--genome <filepath>" to seed the run.
      */
     public void run(String[] args, int maxGenerations, int goalCheckInterval) {
+        // Check for --demo flag first. If present, run in demo-only mode.
+        if (args.length == 2 && args[0].equalsIgnoreCase("--demo")) {
+            runDemonstrationOnly(args[1]);
+            return; // End execution after demonstration
+        }
+
+        // If not in demo mode, proceed with the normal evolution run.
+        runEvolution(args, maxGenerations, goalCheckInterval);
+
+    }
+
+    /**
+     * Loads a genome and immediately runs the demonstration, skipping evolution.
+     * @param genomeFilePath The path to the genome JSON file.
+     */
+    private void runDemonstrationOnly(String genomeFilePath) {
+        System.out.println("--- Running in Demonstration-Only Mode ---");
+
+        // 1. Load the genome
+        Genome demoGenome = loadGenomeFromFile(genomeFilePath);
+        if (demoGenome == null) {
+            System.err.println("Could not run demonstration. Exiting.");
+            return;
+        }
+
+        // 2. Setup the necessary components for demonstration
+        NEATConfig config = createNeatConfig();
+        setupVisualizers();
+
+        // 3. Update topology visualizer with the loaded genome
+        System.out.println("\n--- Loaded Genome Topology ---");
+        System.out.println(demoGenome.getTopologyString());
+        topologyVisualizer.updateVisuals(demoGenome);
+
+        // 4. Run the demonstration
+        System.out.println("\n--- Starting Demonstration ---");
+        demonstrate(demoGenome, config);
+    }
+
+    /**
+     * Executes the standard evolution process.
+     */
+    private void runEvolution(String[] args, int maxGenerations, int goalCheckInterval) {
+        // This method now contains the original logic from the run() method.
+
         // 1. Setup
         setupVisualizers();
         Genome seedGenome = loadSeedGenomeFromArgs(args);
@@ -156,11 +207,10 @@ public abstract class AbstractNeatExample {
                 onNewAllTimeBest(allTimeBest);
             }
 
-            // Periodically check if the goal is met, or check immediately if we have a new best
             if (goalEvaluator != null && (newBestFitnessFound || population.getGeneration() % goalCheckInterval == 0)) {
                 if (goalEvaluator.isGoalMet(bestOfGen)) {
                     System.out.println("\nSUCCESS! Goal achieved by champion of generation " + population.getGeneration());
-                    allTimeBest = bestOfGen.copy(); // Ensure the actual winner is the all-time best
+                    allTimeBest = bestOfGen.copy();
                     break;
                 } else if (newBestFitnessFound) {
                     System.out.println("...Goal not met yet, continuing evolution.");
@@ -179,11 +229,11 @@ public abstract class AbstractNeatExample {
             }
             System.out.println(finalGenome.getTopologyString());
 
-            saveGenomeToFile(finalGenome); // Save the version we are about to demonstrate
+            saveGenomeToFile(finalGenome);
             topologyVisualizer.updateVisuals(finalGenome);
 
             System.out.println("\n--- Demonstrating All-Time Best Genome ---");
-            demonstrate(finalGenome, config); // Pass the final (maybe-pruned) genome
+            demonstrate(finalGenome, config);
         } else {
             System.out.println("No viable genome was evolved or found.");
         }
@@ -211,23 +261,42 @@ public abstract class AbstractNeatExample {
         }
     }
 
+    /**
+     * Renamed this method for clarity. It specifically handles the --genome flag for seeding.
+     */
     private Genome loadSeedGenomeFromArgs(String[] args) {
         if (args.length == 2 && args[0].equalsIgnoreCase("--genome")) {
-            try {
-                String content = Files.readString(Paths.get(args[1]));
-                System.out.println("Successfully loaded seed genome from: " + args[1]);
-                return Genome.fromJsonString(content);
-            } catch (IOException e) {
-                System.err.println("Error loading genome file: " + e.getMessage());
-                System.exit(1);
-            }
+            return loadGenomeFromFile(args[1]);
         }
         return null;
     }
 
+    /**
+     * New helper method to load a genome from a file, used by both demo and seed modes.
+     */
+    private Genome loadGenomeFromFile(String filePath) {
+        try {
+            String content = Files.readString(Paths.get(filePath));
+            System.out.println("Successfully loaded genome from: " + filePath);
+            return Genome.fromJsonString(content);
+        } catch (IOException e) {
+            System.err.println("Error loading genome file: " + e.getMessage());
+            return null;
+        }
+    }
     private void saveGenomeToFile(Genome genome) {
+        // 1. Get the prefix from the concrete example class
+        String prefix = getGenomeFilePrefix();
+
+        // 2. Get the rounded fitness value
+        long fitness = Math.round(genome.getFitness());
+
+        // 3. Get the timestamp
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String filename = "best_genome_" + timestamp + ".json";
+
+        // 4. Assemble the new filename
+        String filename = String.format("%s_fitness-%d_%s.json", prefix, fitness, timestamp);
+
         try {
             String json = genome.toJsonString();
             Path path = Paths.get(filename);

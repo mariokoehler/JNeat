@@ -32,6 +32,11 @@ public class MainMemoryChallenge extends AbstractNeatExample {
     }
 
     @Override
+    protected String getGenomeFilePrefix() {
+        return "memoryChallenge";
+    }
+
+    @Override
     protected FitnessEvaluator createFitnessEvaluator(NEATConfig config) {
         return new MemoryEvaluator(config);
     }
