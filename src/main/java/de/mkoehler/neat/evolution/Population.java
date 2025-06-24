@@ -1,6 +1,7 @@
 package de.mkoehler.neat.evolution;
 
 import de.mkoehler.neat.config.NEATConfig;
+import de.mkoehler.neat.core.ConnectionGene;
 import de.mkoehler.neat.core.Genome;
 import de.mkoehler.neat.core.NodeGene;
 import de.mkoehler.neat.core.NodeType;
@@ -39,11 +40,26 @@ public class Population {
             for (int j = 0; j < config.getOutputNodes(); j++) {
                 genome.addNodeGene(new NodeGene(config.getInputNodes() + j, NodeType.OUTPUT));
             }
-            // Optional: Create one initial connection
-            int inNode = random.nextInt(config.getInputNodes());
-            int outNode = config.getInputNodes() + random.nextInt(config.getOutputNodes());
-            int innovation = innovationTracker.getInnovationNumber(inNode, outNode);
-            genome.addConnectionGene(new de.mkoehler.neat.core.ConnectionGene(inNode, outNode, random.nextDouble() * 2 - 1, true, innovation));
+
+            if (config.isStartWithFullyConnectedTopology()) {
+                // Connect every input node to every output node
+                for (int in = 0; in < config.getInputNodes(); in++) {
+                    for (int out = 0; out < config.getOutputNodes(); out++) {
+                        int outNodeId = config.getInputNodes() + out;
+                        int innovation = innovationTracker.getInnovationNumber(in, outNodeId);
+                        // Start with small random weights
+                        double weight = (random.nextDouble() * 2 - 1) * 0.5;
+                        genome.addConnectionGene(new ConnectionGene(in, outNodeId, weight, true, innovation));
+                    }
+                }
+            } else {
+                // The traditional NEAT approach: start with one random connection
+                int inNode = random.nextInt(config.getInputNodes());
+                int outNode = config.getInputNodes() + random.nextInt(config.getOutputNodes());
+                int innovation = innovationTracker.getInnovationNumber(inNode, outNode);
+                genome.addConnectionGene(new ConnectionGene(inNode, outNode, random.nextDouble() * 2 - 1, true, innovation));
+            }
+
             genomes.add(genome);
         }
     }

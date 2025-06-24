@@ -104,31 +104,35 @@ public class Genome {
     }
 
     private void mutateAddConnection(NEATConfig config, InnovationTracker innovationTracker, Random random) {
-        List<NodeGene> possibleInputs = new ArrayList<>();
-        List<NodeGene> possibleOutputs = new ArrayList<>();
+        List<NodeGene> possibleStartNodes = new ArrayList<>();
+        List<NodeGene> possibleEndNodes = new ArrayList<>();
 
-        for(NodeGene node : nodes.values()){
-            possibleInputs.add(node);
-            if(node.type() != NodeType.INPUT){
-                possibleOutputs.add(node);
+        // Correctly partition the nodes
+        for (NodeGene node : nodes.values()) {
+            if (node.type() != NodeType.OUTPUT) {
+                possibleStartNodes.add(node); // Inputs and Hidden nodes can be start points
+            }
+            if (node.type() != NodeType.INPUT) {
+                possibleEndNodes.add(node); // Hidden and Output nodes can be end points
             }
         }
 
-        if (possibleInputs.isEmpty() || possibleOutputs.isEmpty()) return;
+        if (possibleStartNodes.isEmpty() || possibleEndNodes.isEmpty()) return;
 
-        // Use the configurable number of attempts
         for (int i = 0; i < config.getAddConnectionAttempts(); i++) {
-            NodeGene node1 = possibleInputs.get(random.nextInt(possibleInputs.size()));
-            NodeGene node2 = possibleOutputs.get(random.nextInt(possibleOutputs.size()));
+            NodeGene node1 = possibleStartNodes.get(random.nextInt(possibleStartNodes.size()));
+            NodeGene node2 = possibleEndNodes.get(random.nextInt(possibleEndNodes.size()));
 
             if (node1.id() == node2.id() || connectionExists(node1.id(), node2.id())) {
                 continue;
             }
 
+            // The isPathExists check is the main guard against cycles.
+            // If a recurrent connection is allowed, this check should be skipped.
             if (!config.isAllowRecurrent() && isPathExists(node2.id(), node1.id())) {
                 continue;
             }
-            // Use the configurable weight range
+
             double weight = random.nextDouble() * config.getNewConnectionWeightRange() * 2 - config.getNewConnectionWeightRange();
             int innovation = innovationTracker.getInnovationNumber(node1.id(), node2.id());
             addConnectionGene(new ConnectionGene(node1.id(), node2.id(), weight, true, innovation));

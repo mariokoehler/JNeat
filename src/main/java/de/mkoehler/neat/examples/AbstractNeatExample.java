@@ -112,7 +112,7 @@ public abstract class AbstractNeatExample {
      * @param newBest The new best genome.
      */
     protected void onNewAllTimeBest(Genome newBest) {
-        System.out.println("New all-time best fitness found! Checking if it meets the goal...");
+        System.out.println("New all-time best fitness found!");
         this.topologyVisualizer.updateVisuals(newBest);
     }
 
@@ -126,7 +126,7 @@ public abstract class AbstractNeatExample {
      * @return {@code true} to prune the genome, {@code false} to use it as-is.
      */
     protected boolean shouldPruneFinalGenome() {
-        return true; // Default behavior is to prune for cleaner topology.
+        return false; // Default behavior is to prune for cleaner topology.
     }
 
     /**
@@ -191,7 +191,8 @@ public abstract class AbstractNeatExample {
 
         if (seedGenome != null) {
             allTimeBest = seedGenome.copy();
-        }
+            System.out.println("Initializing visualizer with seed genome topology.");
+            topologyVisualizer.updateVisuals(allTimeBest);        }
 
         // 2. Evolution Loop
         for (int i = 0; i < maxGenerations; i++) {
