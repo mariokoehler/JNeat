@@ -46,6 +46,17 @@ public class NEATConfig {
     @Builder.Default private int populationSize = 150;
 
     /**
+     * If true, the system will save a JSON file every time a new champion genome
+     * (with a new all-time best fitness) is found during evolution.
+     * <p>
+     * This is highly recommended for long-running experiments to prevent loss of
+     * progress in case of a crash. If false (default), only the final best
+     * genome is saved at the end of the run.
+     * </p>
+     */
+    @Builder.Default private boolean saveEveryChampion = false;
+
+    /**
      * The compatibility distance threshold (δ_t) for grouping genomes into species.
      * <p>
      * If a genome's distance to a species' representative is less than this

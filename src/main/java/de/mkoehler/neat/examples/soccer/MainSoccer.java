@@ -40,6 +40,7 @@ public class MainSoccer extends AbstractNeatExample {
                 .hiddenActivationFunction(ActivationFunction.TANH)
                 .outputActivationFunction(ActivationFunction.TANH) // Good for [-1, 1] turn output
                 .startWithFullyConnectedTopology(true)
+                .saveEveryChampion(true)
                 .build();
     }
 

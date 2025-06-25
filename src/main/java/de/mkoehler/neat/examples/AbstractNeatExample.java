@@ -111,9 +111,14 @@ public abstract class AbstractNeatExample {
      *
      * @param newBest The new best genome.
      */
-    protected void onNewAllTimeBest(Genome newBest) {
+    protected void onNewAllTimeBest(Genome newBest, NEATConfig config) {
         System.out.println("New all-time best fitness found!");
         this.topologyVisualizer.updateVisuals(newBest);
+
+        if (config.isSaveEveryChampion()) {
+            System.out.println("Saving new champion to file...");
+            saveGenomeToFile(newBest);
+        }
     }
 
     /**
@@ -191,8 +196,10 @@ public abstract class AbstractNeatExample {
 
         if (seedGenome != null) {
             allTimeBest = seedGenome.copy();
+            population.getInnovationTracker().primeFromPopulation(population.getGenomes());
             System.out.println("Initializing visualizer with seed genome topology.");
-            topologyVisualizer.updateVisuals(allTimeBest);        }
+            topologyVisualizer.updateVisuals(allTimeBest);
+        }
 
         // 2. Evolution Loop
         for (int i = 0; i < maxGenerations; i++) {
@@ -205,7 +212,7 @@ public abstract class AbstractNeatExample {
 
             if (newBestFitnessFound) {
                 allTimeBest = bestOfGen.copy();
-                onNewAllTimeBest(allTimeBest);
+                onNewAllTimeBest(allTimeBest, config);
             }
 
             if (goalEvaluator != null && (newBestFitnessFound || population.getGeneration() % goalCheckInterval == 0)) {
