@@ -22,7 +22,7 @@ public class MainSoccer extends AbstractNeatExample {
 
     public static void main(String[] args) {
         MainSoccer challenge = new MainSoccer();
-        challenge.run(args, 1000, 10); // Run for 500 generations
+        challenge.run(args, 10000, 10); // Run for 500 generations
     }
 
     @Override

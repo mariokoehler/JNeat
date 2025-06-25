@@ -86,8 +86,7 @@ public class Neuron {
         if (type == NodeType.INPUT) {
             return; // Input value is set directly by the network
         }
-        double sum = inputSynapses.stream().mapToDouble(Synapse::getWeightedValue).sum();
-        this.outputValue = activationFunction.applyAsDouble(sum);
+        this.outputValue = activationFunction.applyAsDouble(inputSynapses.stream().mapToDouble(Synapse::getWeightedValue).sum());
     }
 
     /**
