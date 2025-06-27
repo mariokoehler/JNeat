@@ -4,8 +4,6 @@ JNeat is a flexible and well-documented implementation of the **NeuroEvolution o
 
 This library is designed to be both a powerful tool for machine learning practitioners and an educational resource for those looking to understand the inner workings of NEAT. It features a clean separation of concerns, extensive documentation, and a rich suite of examples demonstrating its capabilities.
 
-[![Java CI with Maven](https://github.com/your-username/JNeat/actions/workflows/maven.yml/badge.svg)](https://github.com/your-username/JNeat/actions/workflows/maven.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https/opensource.org/licenses/MIT)
 
 
 ## What is NEAT?
